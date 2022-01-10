@@ -21,5 +21,5 @@ Original: Web Edition https://github.com/ix64/unlock-music
 ## How to use
 
 - Drag the encrypted file to `um.exe` (Tested on Windows)
-- Run: `./um [-o <output dir>] [-i] <input dir/file>`
-- Use `./um -h` to show help menu
+- Run: `go run ./cmd/um [-o <output dir>] [-i] <input dir/file>`
+- Use `go run ./cmd/um -h` to show help menu
