@@ -3,6 +3,7 @@ package tm
 import (
 	"bytes"
 	"errors"
+
 	"github.com/unlock-music/cli/algo/common"
 )
 
@@ -75,5 +76,4 @@ func init() {
 	// QQ Music IOS Mp3
 	common.RegisterDecoder("tm0", false, common.NewRawDecoder)
 	common.RegisterDecoder("tm3", false, common.NewRawDecoder)
-
 }

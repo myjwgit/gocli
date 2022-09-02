@@ -9,17 +9,17 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/unlock-music/cli/algo/common"
+	"github.com/unlock-music/cli/internal/logging"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 
-	"github.com/unlock-music/cli/algo/common"
 	_ "github.com/unlock-music/cli/algo/kgm"
 	_ "github.com/unlock-music/cli/algo/kwm"
 	_ "github.com/unlock-music/cli/algo/ncm"
 	_ "github.com/unlock-music/cli/algo/qmc"
 	_ "github.com/unlock-music/cli/algo/tm"
 	_ "github.com/unlock-music/cli/algo/xm"
-	"github.com/unlock-music/cli/internal/logging"
 )
 
 var AppVersion = "v0.0.6"
@@ -43,26 +43,30 @@ func main() {
 		HideHelpCommand: true,
 		UsageText:       "um [-o /path/to/output/dir] [--extra-flags] [-i] /path/to/input",
 	}
-	err := app.Run(os.Args)
-	if err != nil {
+
+	if err := app.Run(os.Args); err != nil {
 		logging.Log().Fatal("run app failed", zap.Error(err))
 	}
 }
+
 func printSupportedExtensions() {
 	exts := []string{}
 	for ext := range common.DecoderRegistry {
 		exts = append(exts, ext)
 	}
+
 	sort.Strings(exts)
 	for _, ext := range exts {
 		fmt.Printf("%s: %d\n", ext, len(common.DecoderRegistry[ext]))
 	}
 }
+
 func appMain(c *cli.Context) (err error) {
 	if c.Bool("supported-ext") {
 		printSupportedExtensions()
 		return nil
 	}
+
 	input := c.String("input")
 	if input == "" {
 		switch c.Args().Len() {
@@ -90,9 +94,6 @@ func appMain(c *cli.Context) (err error) {
 		}
 	}
 
-	skipNoop := c.Bool("skip-noop")
-	removeSource := c.Bool("remove-source")
-
 	inputStat, err := os.Stat(input)
 	if err != nil {
 		return err
@@ -110,26 +111,32 @@ func appMain(c *cli.Context) (err error) {
 		return errors.New("output should be a writable directory")
 	}
 
+	skipNoop := c.Bool("skip-noop")
+	removeSource := c.Bool("remove-source")
+
 	if inputStat.IsDir() {
 		return dealDirectory(input, output, skipNoop, removeSource)
-	} else {
-		allDec := common.GetDecoder(inputStat.Name(), skipNoop)
-		if len(allDec) == 0 {
-			logging.Log().Fatal("skipping while no suitable decoder")
-		}
-		return tryDecFile(input, output, allDec, removeSource)
 	}
 
+	allDec := common.GetDecoder(inputStat.Name(), skipNoop)
+	if len(allDec) == 0 {
+		logging.Log().Fatal("skipping while no suitable decoder")
+	}
+
+	return tryDecFile(input, output, allDec, removeSource)
 }
+
 func dealDirectory(inputDir string, outputDir string, skipNoop bool, removeSource bool) error {
 	items, err := os.ReadDir(inputDir)
 	if err != nil {
 		return err
 	}
+
 	for _, item := range items {
 		if item.IsDir() {
 			continue
 		}
+
 		allDec := common.GetDecoder(item.Name(), skipNoop)
 		if len(allDec) == 0 {
 			logging.Log().Info("skipping while no suitable decoder", zap.String("file", item.Name()))
@@ -141,6 +148,7 @@ func dealDirectory(inputDir string, outputDir string, skipNoop bool, removeSourc
 			logging.Log().Error("conversion failed", zap.String("source", item.Name()))
 		}
 	}
+
 	return nil
 }
 
@@ -159,9 +167,11 @@ func tryDecFile(inputFile string, outputDir string, allDec []common.NewDecoderFu
 		logging.Log().Warn("try decode failed", zap.Error(err))
 		dec = nil
 	}
+
 	if dec == nil {
 		return errors.New("no any decoder can resolve the file")
 	}
+
 	if err := dec.Decode(); err != nil {
 		return errors.New("failed while decoding: " + err.Error())
 	}
@@ -178,21 +188,20 @@ func tryDecFile(inputFile string, outputDir string, allDec []common.NewDecoderFu
 	filenameOnly := strings.TrimSuffix(filepath.Base(inputFile), filepath.Ext(inputFile))
 
 	outPath := filepath.Join(outputDir, filenameOnly+outExt)
-	err = os.WriteFile(outPath, outData, 0644)
-	if err != nil {
+	if err = os.WriteFile(outPath, outData, 0644); err != nil {
 		return err
 	}
 
 	// if source file need to be removed
-	if removeSource {
-		err := os.RemoveAll(inputFile)
-		if err != nil {
-			return err
-		}
-		logging.Log().Info("successfully converted, and source file is removed", zap.String("source", inputFile), zap.String("destination", outPath))
-	} else {
+	if !removeSource {
 		logging.Log().Info("successfully converted", zap.String("source", inputFile), zap.String("destination", outPath))
+		return nil
 	}
+
+	if err := os.RemoveAll(inputFile); err != nil {
+		return err
+	}
+	logging.Log().Info("successfully converted, and source file is removed", zap.String("source", inputFile), zap.String("destination", outPath))
 
 	return nil
 }

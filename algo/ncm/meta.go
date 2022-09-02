@@ -1,8 +1,9 @@
 package ncm
 
 import (
-	"github.com/unlock-music/cli/algo/common"
 	"strings"
+
+	"github.com/unlock-music/cli/algo/common"
 )
 
 type RawMeta interface {
@@ -10,6 +11,7 @@ type RawMeta interface {
 	GetFormat() string
 	GetAlbumImageURL() string
 }
+
 type RawMetaMusic struct {
 	Format        string          `json:"format"`
 	MusicID       int             `json:"musicId"`
@@ -30,11 +32,11 @@ type RawMetaMusic struct {
 func (m RawMetaMusic) GetAlbumImageURL() string {
 	return m.AlbumPic
 }
+
 func (m RawMetaMusic) GetArtists() (artists []string) {
 	for _, artist := range m.Artist {
 		for _, item := range artist {
-			name, ok := item.(string)
-			if ok {
+			if name, ok := item.(string); ok {
 				artists = append(artists, name)
 			}
 		}
@@ -49,6 +51,7 @@ func (m RawMetaMusic) GetTitle() string {
 func (m RawMetaMusic) GetAlbum() string {
 	return m.Album
 }
+
 func (m RawMetaMusic) GetFormat() string {
 	return m.Format
 }

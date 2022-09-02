@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/unlock-music/cli/algo/common"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/unlock-music/cli/algo/common"
 )
 
 var (
@@ -57,6 +58,7 @@ func (d *Decoder) Validate() error {
 	if lenData < 1024 {
 		return ErrKwFileSize
 	}
+
 	if !bytes.Equal(magicHeader, d.file[:16]) {
 		return ErrKwMagicHeader
 	}
@@ -69,9 +71,11 @@ func generateMask(key []byte) []byte {
 	keyStr := strconv.FormatUint(keyInt, 10)
 	keyStrTrim := padOrTruncate(keyStr, 32)
 	mask := make([]byte, 32)
+
 	for i := 0; i < 32; i++ {
 		mask[i] = keyPreDefined[i] ^ keyStrTrim[i]
 	}
+
 	return mask
 }
 
@@ -83,13 +87,13 @@ func (d *Decoder) parseBitrateAndType() {
 			break
 		}
 	}
+
 	var err error
 	d.bitrate, err = strconv.Atoi(bitType[:charPos])
 	if err != nil {
 		d.bitrate = 0
 	}
 	d.outputExt = strings.ToLower(bitType[charPos:])
-
 }
 
 func (d *Decoder) Decode() error {
@@ -102,6 +106,7 @@ func (d *Decoder) Decode() error {
 	for i := 0; i < dataLen; i++ {
 		d.audio[i] ^= d.mask[i&0x1F] //equals: [i % 32]
 	}
+
 	return nil
 }
 

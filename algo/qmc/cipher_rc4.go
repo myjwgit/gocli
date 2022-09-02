@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-// A rc4Cipher is an instance of RC4 using a particular key.
+// rc4Cipher is an instance of RC4 using a particular key.
 type rc4Cipher struct {
 	box  []byte
 	key  []byte
@@ -87,6 +87,7 @@ func (c *rc4Cipher) Decrypt(src []byte, offset int) {
 			return
 		}
 	}
+
 	for toProcess > rc4SegmentSize {
 		c.encASegment(src[processed:processed+rc4SegmentSize], offset)
 		markProcess(rc4SegmentSize)
@@ -96,6 +97,7 @@ func (c *rc4Cipher) Decrypt(src []byte, offset int) {
 		c.encASegment(src[processed:], offset)
 	}
 }
+
 func (c *rc4Cipher) encFirstSegment(buf []byte, offset int) {
 	for i := 0; i < len(buf); i++ {
 		buf[i] ^= c.key[c.getSegmentSkip(offset+i)]
@@ -117,6 +119,7 @@ func (c *rc4Cipher) encASegment(buf []byte, offset int) {
 		}
 	}
 }
+
 func (c *rc4Cipher) getSegmentSkip(id int) int {
 	seed := int(c.key[id%c.n])
 	idx := int64(float64(c.hash) / float64((id+1)*seed) * 100.0)

@@ -4,9 +4,7 @@ import (
 	"os"
 	"sync"
 	"time"
-)
 
-import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

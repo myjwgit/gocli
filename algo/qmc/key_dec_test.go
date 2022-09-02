@@ -15,6 +15,7 @@ func TestSimpleMakeKey(t *testing.T) {
 		}
 	})
 }
+
 func loadDecryptKeyData(name string) ([]byte, []byte, error) {
 	keyRaw, err := os.ReadFile(fmt.Sprintf("./testdata/%s_key_raw.bin", name))
 	if err != nil {
@@ -26,6 +27,7 @@ func loadDecryptKeyData(name string) ([]byte, []byte, error) {
 	}
 	return keyRaw, keyDec, nil
 }
+
 func TestDecryptKey(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -37,6 +39,7 @@ func TestDecryptKey(t *testing.T) {
 		{"mflac_rc4(256)", "mflac_rc4", false},
 		{"mgg_map(256)", "mgg_map", false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			raw, want, err := loadDecryptKeyData(tt.filename)

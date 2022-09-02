@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+
 	"github.com/unlock-music/cli/algo/common"
 	"github.com/unlock-music/cli/internal/logging"
 )
@@ -59,6 +60,7 @@ func (d *Decoder) Validate() error {
 	d.key = d.file[0x1c:0x2c]
 	d.key = append(d.key, 0x00)
 	_ = d.file[0x2c:0x3c] //todo: key2
+
 	return nil
 }
 
@@ -67,6 +69,7 @@ func (d *Decoder) Decode() error {
 	dataEncrypted := d.file[headerLen:]
 	lenData := len(dataEncrypted)
 	initMask()
+
 	if fullMaskLen < lenData {
 		logging.Log().Warn("The file is too large and the processed audio is incomplete, " +
 			"please report to us about this file at https://github.com/unlock-music/cli/issues")
@@ -78,13 +81,16 @@ func (d *Decoder) Decode() error {
 		med8 := dataEncrypted[i] ^ d.key[i%17] ^ maskV2PreDef[i%(16*17)] ^ maskV2[i>>4]
 		d.audio[i] = med8 ^ (med8&0xf)<<4
 	}
+
 	if d.isVpr {
 		for i := 0; i < lenData; i++ {
 			d.audio[i] ^= maskDiffVpr[i%17]
 		}
 	}
+
 	return nil
 }
+
 func init() {
 	// Kugou
 	common.RegisterDecoder("kgm", false, NewDecoder)

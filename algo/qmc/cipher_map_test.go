@@ -22,6 +22,7 @@ func loadTestDataMapCipher(name string) ([]byte, []byte, []byte, error) {
 	}
 	return key, raw, target, nil
 }
+
 func Test_mapCipher_Decrypt(t *testing.T) {
 
 	tests := []struct {

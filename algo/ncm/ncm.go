@@ -6,13 +6,14 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/unlock-music/cli/algo/common"
 	"github.com/unlock-music/cli/internal/logging"
 	"github.com/unlock-music/cli/internal/utils"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 var (
@@ -65,6 +66,7 @@ func (d *Decoder) readKeyData() error {
 	if d.offsetKey == 0 || d.offsetKey+4 > d.fileLen {
 		return errors.New("invalid cover file offset")
 	}
+
 	bKeyLen := d.file[d.offsetKey : d.offsetKey+4]
 	iKeyLen := binary.LittleEndian.Uint32(bKeyLen)
 	d.offsetMeta = d.offsetKey + 4 + iKeyLen
@@ -82,9 +84,11 @@ func (d *Decoder) readMetaData() error {
 	if d.offsetMeta == 0 || d.offsetMeta+4 > d.fileLen {
 		return errors.New("invalid meta file offset")
 	}
+
 	bMetaLen := d.file[d.offsetMeta : d.offsetMeta+4]
 	iMetaLen := binary.LittleEndian.Uint32(bMetaLen)
 	d.offsetCover = d.offsetMeta + 4 + iMetaLen
+
 	if iMetaLen == 0 {
 		return errors.New("no any meta file found")
 	}
@@ -159,7 +163,9 @@ func (d *Decoder) readCoverData() error {
 	if iCoverLen == 0 {
 		return errors.New("no any cover file found")
 	}
+
 	d.cover = d.file[coverLenStart+4 : 4+coverLenStart+iCoverLen]
+
 	return nil
 }
 
@@ -167,6 +173,7 @@ func (d *Decoder) readAudioData() error {
 	if d.offsetAudio == 0 || d.offsetAudio > d.fileLen {
 		return errors.New("invalid audio offset")
 	}
+
 	audioRaw := d.file[d.offsetAudio:]
 	audioLen := len(audioRaw)
 	d.audio = make([]byte, audioLen)
@@ -186,6 +193,7 @@ func (d *Decoder) Decode() error {
 	if err == nil {
 		err = d.parseMeta()
 	}
+
 	if err != nil {
 		logging.Log().Warn("parse ncm meta file failed", zap.Error(err))
 	}
@@ -215,27 +223,32 @@ func (d Decoder) GetCoverImage() []byte {
 	if d.cover != nil {
 		return d.cover
 	}
+
 	{
 		imgURL := d.meta.GetAlbumImageURL()
 		if d.meta != nil && !strings.HasPrefix(imgURL, "http") {
 			return nil
 		}
+
 		resp, err := http.Get(imgURL)
 		if err != nil {
 			logging.Log().Warn("download image failed", zap.Error(err), zap.String("url", imgURL))
 			return nil
 		}
+
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			logging.Log().Warn("download image failed", zap.String("http", resp.Status),
 				zap.String("url", imgURL))
 			return nil
 		}
+
 		data, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			logging.Log().Warn("download image failed", zap.Error(err), zap.String("url", imgURL))
 			return nil
 		}
+
 		return data
 	}
 }
