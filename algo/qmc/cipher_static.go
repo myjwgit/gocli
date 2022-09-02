@@ -13,6 +13,7 @@ func (c *staticCipher) Decrypt(buf []byte, offset int) {
 		buf[i] ^= c.getMask(offset + i)
 	}
 }
+
 func (c *staticCipher) getMask(offset int) byte {
 	if offset > 0x7FFF {
 		offset %= 0x7FFF

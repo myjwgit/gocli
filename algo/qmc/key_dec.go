@@ -16,17 +16,19 @@ func simpleMakeKey(salt byte, length int) []byte {
 	}
 	return keyBuf
 }
+
 func DecryptKey(rawKey []byte) ([]byte, error) {
 	rawKeyDec := make([]byte, base64.StdEncoding.DecodedLen(len(rawKey)))
 	n, err := base64.StdEncoding.Decode(rawKeyDec, rawKey)
 	if err != nil {
 		return nil, err
 	}
+
 	if n < 16 {
 		return nil, errors.New("key length is too short")
 	}
-	rawKeyDec = rawKeyDec[:n]
 
+	rawKeyDec = rawKeyDec[:n]
 	simpleKey := simpleMakeKey(106, 8)
 	teaKey := make([]byte, 16)
 	for i := 0; i < 8; i++ {
@@ -38,14 +40,17 @@ func DecryptKey(rawKey []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return append(rawKeyDec[:8], rs...), nil
 }
+
 func decryptTencentTea(inBuf []byte, key []byte) ([]byte, error) {
 	const saltLen = 2
 	const zeroLen = 7
 	if len(inBuf)%8 != 0 {
 		return nil, errors.New("inBuf size not a multiple of the block size")
 	}
+
 	if len(inBuf) < 16 {
 		return nil, errors.New("inBuf size too small")
 	}
@@ -62,8 +67,8 @@ func decryptTencentTea(inBuf []byte, key []byte) ([]byte, error) {
 	if padLen+saltLen != 8 {
 		return nil, errors.New("invalid pad len")
 	}
-	out := make([]byte, outLen)
 
+	out := make([]byte, outLen)
 	ivPrev := make([]byte, 8)
 	ivCur := inBuf[:8]
 
@@ -80,6 +85,7 @@ func decryptTencentTea(inBuf []byte, key []byte) ([]byte, error) {
 		inBufPos += 8
 		destIdx = 0
 	}
+
 	for i := 1; i <= saltLen; {
 		if destIdx < 8 {
 			destIdx++
@@ -108,6 +114,7 @@ func decryptTencentTea(inBuf []byte, key []byte) ([]byte, error) {
 
 	return out, nil
 }
+
 func xor8Bytes(dst, a, b []byte) {
 	for i := 0; i < 8; i++ {
 		dst[i] = a[i] ^ b[i]

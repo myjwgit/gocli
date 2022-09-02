@@ -24,8 +24,8 @@ func loadTestDataQmcDecoder(filename string) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 	return bytes.Join([][]byte{encBody, encSuffix}, nil), target, nil
-
 }
+
 func TestMflac0Decoder_Read(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -60,7 +60,6 @@ func TestMflac0Decoder_Read(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestMflac0Decoder_Validate(t *testing.T) {

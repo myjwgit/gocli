@@ -35,15 +35,19 @@ func SnifferOGG(header []byte) bool {
 func SnifferFLAC(header []byte) bool {
 	return bytes.HasPrefix(header, []byte("fLaC"))
 }
+
 func SnifferMP3(header []byte) bool {
 	return bytes.HasPrefix(header, []byte("ID3"))
 }
+
 func SnifferWAV(header []byte) bool {
 	return bytes.HasPrefix(header, []byte("RIFF"))
 }
+
 func SnifferWMA(header []byte) bool {
 	return bytes.HasPrefix(header, []byte("\x30\x26\xb2\x75\x8e\x66\xcf\x11\xa6\xd9\x00\xaa\x00\x62\xce\x6c"))
 }
+
 func SnifferAAC(header []byte) bool {
 	return bytes.HasPrefix(header, []byte{0xFF, 0xF1})
 }

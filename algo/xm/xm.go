@@ -3,6 +3,7 @@ package xm
 import (
 	"bytes"
 	"errors"
+
 	"github.com/unlock-music/cli/algo/common"
 	"github.com/unlock-music/cli/internal/logging"
 	"go.uber.org/zap"
@@ -58,6 +59,7 @@ func (d *Decoder) Validate() error {
 	if lenData < 16 {
 		return ErrFileSize
 	}
+
 	if !bytes.Equal(magicHeader, d.file[:4]) ||
 		!bytes.Equal(magicHeader2, d.file[8:12]) {
 		return ErrMagicHeader
@@ -76,6 +78,7 @@ func (d *Decoder) Validate() error {
 	if d.headerLen+16 > uint32(lenData) {
 		return ErrFileSize
 	}
+
 	return nil
 }
 

@@ -100,10 +100,12 @@ func (d *Decoder) searchKey() error {
 	if err != nil {
 		return err
 	}
+
 	buf, err := io.ReadAll(io.LimitReader(d.r, 4))
 	if err != nil {
 		return err
 	}
+
 	if string(buf) == "QTag" {
 		if err := d.readRawMetaQTag(); err != nil {
 			return err
@@ -118,6 +120,7 @@ func (d *Decoder) searchKey() error {
 			return nil
 		}
 	}
+
 	return nil
 }
 
@@ -146,10 +149,12 @@ func (d *Decoder) readRawMetaQTag() error {
 	if _, err := d.r.Seek(-8, io.SeekEnd); err != nil {
 		return err
 	}
+
 	buf, err := io.ReadAll(io.LimitReader(d.r, 4))
 	if err != nil {
 		return err
 	}
+
 	rawMetaLen := int64(binary.BigEndian.Uint32(buf))
 
 	// read raw meta data
@@ -157,6 +162,7 @@ func (d *Decoder) readRawMetaQTag() error {
 	if err != nil {
 		return err
 	}
+
 	d.audioLen = int(audioLen)
 	rawMetaData, err := io.ReadAll(io.LimitReader(d.r, rawMetaLen))
 	if err != nil {
@@ -177,6 +183,7 @@ func (d *Decoder) readRawMetaQTag() error {
 	if err != nil {
 		return err
 	}
+
 	d.rawMetaExtra2, err = strconv.Atoi(items[2])
 	if err != nil {
 		return err

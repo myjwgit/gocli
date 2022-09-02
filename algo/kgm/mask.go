@@ -3,10 +3,11 @@ package kgm
 import (
 	"bytes"
 	_ "embed"
+	"io"
+
 	"github.com/ulikunitz/xz"
 	"github.com/unlock-music/cli/internal/logging"
 	"go.uber.org/zap"
-	"io"
 )
 
 var maskDiffVpr = []byte{
@@ -41,7 +42,7 @@ var maskV2 []byte
 var fullMaskLen int
 var initMaskOK = false
 
-//todo: decompress mask on demand
+// TODO: decompress mask on demand
 func initMask() {
 	if initMaskOK {
 		return
