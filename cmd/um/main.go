@@ -55,6 +55,7 @@ func main() {
 			&cli.BoolFlag{Name: "update-metadata", Usage: "update metadata & album art from network", Required: false, Value: false},
 			&cli.BoolFlag{Name: "overwrite", Usage: "overwrite output file without asking", Required: false, Value: false},
 			&cli.BoolFlag{Name: "watch", Usage: "watch the input dir and process new files", Required: false, Value: false},
+			&cli.BoolFlag{Name: "recursive", Aliases: []string{"r"}, Usage: "unblock dir recursively", Required: false, Value: false},
 
 			&cli.BoolFlag{Name: "supported-ext", Usage: "show supported file extensions and exit", Required: false, Value: false},
 		},
@@ -139,6 +140,9 @@ func appMain(c *cli.Context) (err error) {
 	}
 
 	if inputStat.IsDir() {
+		if c.Bool("recursive") {
+			return proc.processDirRecursively(input, "")
+		}
 		wacthDir := c.Bool("watch")
 		if !wacthDir {
 			return proc.processDir(input)
@@ -236,6 +240,49 @@ func (p *processor) processDir(inputDir string) error {
 		}
 	}
 	return nil
+}
+
+func (p *processor) processDirRecursively(inputDir string, appendDir string) error {
+	items, err := os.ReadDir(inputDir)
+	if err != nil {
+		logger.Error("cannot read dir", zap.String("source", inputDir), zap.Error(err))
+		return err
+	}
+	var rtErr error = nil
+	for _, item := range items {
+		itemPath := filepath.Join(inputDir, item.Name())
+		if item.IsDir() {
+			rtErr = p.processDirRecursively(itemPath, filepath.Join(appendDir, item.Name()))
+			continue
+		}
+
+		allDec := common.GetDecoder(itemPath, p.skipNoopDecoder)
+		if len(allDec) == 0 {
+			logger.Info("skipping while no suitable decoder", zap.String("source", item.Name()))
+			continue
+		}
+
+		outDirTmp := p.outputDir
+		p.outputDir = filepath.Join(p.outputDir, appendDir)
+		outputStat, err := os.Stat(p.outputDir)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				err = os.MkdirAll(p.outputDir, 0755)
+			}
+		} else if !outputStat.IsDir() {
+			err = errors.New("output should be a writable directory")
+		}
+		if err == nil { // process when there is no error
+			if err := p.process(itemPath, allDec); err != nil {
+				logger.Error("conversion failed", zap.String("source", item.Name()), zap.Error(err))
+			}
+		} else {
+			logger.Error("error", zap.Error(err))
+			rtErr = err
+		}
+		p.outputDir = outDirTmp
+	}
+	return rtErr
 }
 
 func (p *processor) processFile(filePath string) error {
